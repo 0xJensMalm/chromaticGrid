@@ -1,3 +1,6 @@
+let offsetMagnitude = 10; // This can stay outside because it's not using p5.js constants or functions
+let offsetAngle; // Declare the variable here without initializing i
+
 const mainColorCombinations = [
   { start: "#8B0000", end: "#FFD700" }, // Dark Red -> Yellow
   { start: "#00008B", end: "#800080" }, // Dark Blue -> Purple
@@ -15,16 +18,21 @@ let direction; // Shared gradient direction for both grids
 function setup() {
   createCanvas(500, 700); // Set canvas size
   noLoop(); // No need to loop since the grid doesn't change
+  offsetAngle = PI / 4; // Correctly assign to the global variable
   direction = random(gradientDirections); // Select a random gradient direction for both grids
 }
 
 function draw() {
   background(40); // Set background color
 
-  // Draw the secondary grid slightly off-center
-  drawGrid(10, 10, 1, complementaryColorCombinations);
+  // Calculate offset based on magnitude and angle
+  let offsetX = offsetMagnitude * cos(offsetAngle);
+  let offsetY = offsetMagnitude * sin(offsetAngle);
 
-  // Draw the main grid centered
+  // Draw the secondary grid with calculated offset
+  drawGrid(offsetX, offsetY, 1, complementaryColorCombinations);
+
+  // Draw the main grid centered with no offset
   drawGrid(0, 0, 0, mainColorCombinations);
 }
 
