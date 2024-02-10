@@ -1,44 +1,54 @@
-const colorCombinations = [
+const mainColorCombinations = [
   { start: "#8B0000", end: "#FFD700" }, // Dark Red -> Yellow
   { start: "#00008B", end: "#800080" }, // Dark Blue -> Purple
 ];
 
+// Complementary colors for the secondary grid
+const complementaryColorCombinations = [
+  { start: "#00FFFF", end: "#00008B" }, // Cyan -> Dark Blue (complement to Red -> Yellow)
+  { start: "#FFFF00", end: "#008000" }, // Yellow -> Green (complement to Blue -> Purple)
+];
+
+const gradientDirections = ["horizontal", "vertical", "diagonal"];
+let direction; // Shared gradient direction for both grids
+
 function setup() {
   createCanvas(500, 700); // Set canvas size
   noLoop(); // No need to loop since the grid doesn't change
+  direction = random(gradientDirections); // Select a random gradient direction for both grids
 }
 
 function draw() {
   background(40); // Set background color
-  drawGrid();
+
+  // Draw the secondary grid slightly off-center
+  drawGrid(10, 10, 1, complementaryColorCombinations);
+
+  // Draw the main grid centered
+  drawGrid(0, 0, 0, mainColorCombinations);
 }
-function drawGrid() {
-  let selectedCombination = colorCombinations[0];
-  const gradientDirections = ["horizontal", "vertical", "diagonal"];
-  let direction = random(gradientDirections); // Select a random gradient direction
 
-  const aspectRatio = width / height; // Canvas aspect ratio
+function drawGrid(offsetX, offsetY, colorIndex, colorCombinations) {
+  let selectedCombination = colorCombinations[colorIndex];
+
+  const aspectRatio = width / height;
   const gridWidth = width * 0.75;
-  const gridHeight = gridWidth / aspectRatio; // Maintain canvas aspect ratio for the grid
-  const gridSizeX = 8; // Number of circles horizontally
-  const gridSizeY = gridSizeX / aspectRatio; // Adjust number of circles vertically based on aspect ratio
-  const padding = 10; // Consistent padding between circles
+  const gridHeight = gridWidth / aspectRatio;
+  const gridSizeX = 6;
+  const gridSizeY = gridSizeX / aspectRatio;
+  const padding = 10;
 
-  // Calculate the size of each circle based on the grid's width
   const circleSize = gridWidth / gridSizeX - padding;
-
-  // Calculate the starting position to center the grid
   const totalWidth = gridSizeX * (circleSize + padding);
   const totalHeight = gridSizeY * (circleSize + padding);
-  const startX = (width - totalWidth + padding) / 2;
-  const startY = (height - totalHeight + padding) / 2;
+  const startX = (width - totalWidth + padding) / 2 + offsetX;
+  const startY = (height - totalHeight + padding) / 2 + offsetY;
 
   for (let i = 0; i < gridSizeX; i++) {
     for (let j = 0; j < gridSizeY; j++) {
       const x = startX + i * (circleSize + padding);
       const y = startY + j * (circleSize + padding);
 
-      // Determine the total number of steps based on the direction
       let totalSteps;
       switch (direction) {
         case "horizontal":
@@ -48,23 +58,19 @@ function drawGrid() {
           totalSteps = gridSizeY;
           break;
         case "diagonal":
-          totalSteps = gridSizeX + gridSizeY - 1; // Max sum of positions in a diagonal direction
+          totalSteps = gridSizeX + gridSizeY - 1;
           break;
       }
 
-      // Calculate the step for the current circle based on direction
       const step = calculateStep(i, j, gridSizeX, gridSizeY, direction);
-
-      // Get the gradient color for the current circle
       const fillColor = getGradientColor(
         selectedCombination.start,
         selectedCombination.end,
         totalSteps,
         step
       );
+      noStroke();
       fill(fillColor);
-
-      // Draw the circle
       ellipse(x, y, circleSize, circleSize);
     }
   }
