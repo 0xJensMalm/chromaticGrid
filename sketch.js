@@ -1,45 +1,59 @@
-let offsetMagnitude = 8; // This can stay outside because it's not using p5.js constants or functions
-let offsetAngle; // Declare the variable here without initializing i
+let offsetMagnitude = 10; // This can stay outside because it's not using p5.js constants or functions
+let offsetAngle; // Declare the variable here without initializing it
 let colorIndex; // Declare a global variable for the color combination index
 let gradientStrength = 100;
 
 const gradientDirections = ["horizontal", "vertical", "diagonal"];
-let direction; // Shared gradient direction for both grids
+let direction; // Shared gradient direction for all grids
 
 function setup() {
   createCanvas(500, 700);
   noLoop();
   offsetAngle = PI / 4;
   direction = random(gradientDirections);
-  colorIndex = floor(random(mainColorCombinations.length)); // Select a random index
+  colorIndex = floor(random(Combination1.length)); // Select a random index for color combinations
 }
 
-const mainColorCombinations = [
-  { start: "#2C00FF", end: "#009AFF" }, // PinkRed -> Yellow
-  { start: "#FF6400", end: "#fffd00" }, // Orange -> Yellow
-  { start: "#96EFFF", end: "#7B66FF" }, //skyBlue -> Purple
+const Combination1 = [
+  { start: "#FF0000", end: "#E00000" }, // Red to Darker Red
+  { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
+  { start: "#FFA500", end: "#E09500" }, // Orange to Darker Orange
+  { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
+  { start: "#FF69B4", end: "#E06090" }, // Hot Pink to Darker Hot Pink
+  { start: "#00FFFF", end: "#00E0E0" }, // Cyan to Darker Cyan
 ];
 
-// Complementary colors for the secondary grid
-const complementaryColorCombinations = [
-  { start: "#FF0F00", end: "#FF9C00" }, //green yellow
-  { start: "#009BFF", end: "#0002FF" },
-  { start: "#FFA696", end: "#EAFF66" },
+const Combination2 = [
+  { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
+  { start: "#800080", end: "#700070" }, // Purple to Darker Purple
+  { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
+  { start: "#FFD700", end: "#E0C300" }, // Gold to Darker Gold
+  { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
+  { start: "#BA55D3", end: "#A050C0" }, // Medium Orchid to Darker Medium Orchid
+];
+
+const Combination3 = [
+  { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
+  { start: "#FF00FF", end: "#E000E0" }, // Magenta to Darker Magenta
+  { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
+  { start: "#1E90FF", end: "#1A80E0" }, // Dodger Blue to Darker Dodger Blue
+  { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
+  { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
 ];
 
 function draw() {
   background(40);
-  //DIFFERENCE, ADD,
-  blendMode(DIFFERENCE);
+  blendMode(ADD);
 
   let offsetX = offsetMagnitude * cos(offsetAngle);
   let offsetY = offsetMagnitude * sin(offsetAngle);
 
-  // Use the same colorIndex for both grids
-  drawGrid(offsetX, offsetY, colorIndex, complementaryColorCombinations);
-  drawGrid(0, 0, colorIndex, mainColorCombinations);
-  console.log(mainColorCombinations);
-  blendMode(DIFFERENCE);
+  // Draw three grids with different offsets and color combinations
+  drawGrid(offsetX, offsetY, colorIndex, Combination2); // Second grid with complementary colors
+  drawGrid(0, 0, colorIndex, Combination1); // First grid with main colors
+  drawGrid(-offsetX, -offsetY, colorIndex, Combination3); // Third grid with its own color scheme
+
+  blendMode(ADD); // Reset blend mode after drawing grids
 }
 
 function drawGrid(offsetX, offsetY, colorIndex, colorCombinations) {
@@ -48,7 +62,7 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations) {
   const aspectRatio = width / height;
   const gridWidth = width * 0.75;
   const gridHeight = gridWidth / aspectRatio;
-  const gridSizeX = 8;
+  const gridSizeX = 10;
   const gridSizeY = gridSizeX / aspectRatio;
   const padding = 10;
 
@@ -89,6 +103,7 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations) {
     }
   }
 }
+
 function getGradientColor(startColor, endColor, totalSteps, step) {
   // Adjust the step based on the gradient strength
   let adjustedStep = step / (totalSteps * (gradientStrength / 100));
@@ -125,6 +140,7 @@ function hexToRgb(hex) {
   }
   return { r, g, b };
 }
+
 function calculateStep(i, j, gridSizeX, gridSizeY, direction) {
   switch (direction) {
     case "horizontal":
