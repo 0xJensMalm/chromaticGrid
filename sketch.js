@@ -2,14 +2,16 @@ let offsetMagnitude = 10; // This can stay outside because it's not using p5.js 
 let offsetAngle; // Declare the variable here without initializing i
 
 const mainColorCombinations = [
-  { start: "#8B0000", end: "#FFD700" }, // Dark Red -> Yellow
-  { start: "#00008B", end: "#800080" }, // Dark Blue -> Purple
+  { start: "#FF004D", end: "#FAEF5D" }, // PinkRed -> Yellow
+  { start: "#FF6400", end: "#fffd00" }, // Orange -> Yellow
+  { start: "#96EFFF", end: "#7B66FF" }, //skyBlue -> Purple
 ];
 
 // Complementary colors for the secondary grid
 const complementaryColorCombinations = [
-  { start: "#00FFFF", end: "#00008B" }, // Cyan -> Dark Blue (complement to Red -> Yellow)
-  { start: "#FFFF00", end: "#008000" }, // Yellow -> Green (complement to Blue -> Purple)
+  { start: "#00FFB2", end: "#5D68FA" }, //green yellow
+  { start: "#009BFF", end: "#0002FF" },
+  { start: "#FFA696", end: "#EAFF66" },
 ];
 
 const gradientDirections = ["horizontal", "vertical", "diagonal"];
