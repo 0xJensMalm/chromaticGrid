@@ -1,17 +1,136 @@
-let offsetMagnitude = 10; // This can stay outside because it's not using p5.js constants or functions
-let offsetAngle; // Declare the variable here without initializing it
-let colorIndex; // Declare a global variable for the color combination index
+let offsetAngle;
+let colorIndex;
 let gradientStrength = 100;
+let gridPadding = 150; // Padding from the canvas edges
 
-const gradientDirections = ["horizontal", "vertical", "diagonal"];
+const numLayers = 2; // Use this variable to control the number of grids
+
+let offsetRange1 = 0; // Offset range for the first grid
+let offsetRange2 = 1; // Offset range for the second grid
+let offsetRange3 = 2; // Offset range for the third grid
+
+const gradientDirections = ["horizontal", "vertical"];
 let direction; // Shared gradient direction for all grids
 
+let offsetSteps = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]; // Steps in pixels
+
 function setup() {
-  createCanvas(500, 700);
+  createCanvas(500 + 2 * gridPadding, 700 + 2 * gridPadding);
   noLoop();
   offsetAngle = PI / 4;
   direction = random(gradientDirections);
-  colorIndex = floor(random(Combination1.length)); // Select a random index for color combinations
+  colorIndex = floor(random(Combination1.length));
+}
+
+function draw() {
+  background(20);
+  blendMode(ADD);
+
+  const shapes = ["circle", "half-circle", "triangle", "square"];
+  const combinationSets = [
+    Combination1,
+    Combination2,
+    Combination3,
+    Combination4,
+    Combination5,
+    Combination6,
+  ];
+
+  // Loop over the number of layers and draw each grid
+  for (let i = 0; i < numLayers; i++) {
+    let offsetX = random(offsetSteps) * cos(offsetAngle);
+    let offsetY = random(offsetSteps) * sin(offsetAngle);
+    let shapeType = random(shapes);
+    let selectedCombination = random(combinationSets);
+    let colorIndex = floor(random(selectedCombination.length));
+
+    drawGrid(offsetX, offsetY, colorIndex, selectedCombination, shapeType);
+
+    // Console output for debugging
+    console.log(
+      `Layer ${i + 1} Color:`,
+      selectedCombination[colorIndex].start,
+      "Shape:",
+      shapeType,
+      "Offset X:",
+      offsetX,
+      "Offset Y:",
+      offsetY
+    );
+  }
+
+  blendMode(BLEND);
+}
+
+function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
+  let selectedCombination = colorCombinations[colorIndex];
+
+  const gridWidth = 375; // Fixed grid width
+  const gridHeight = gridWidth * (700 / 500); // Aspect ratio based on initial setup
+  const gridSizeX = 12;
+  const gridSizeY = gridSizeX * (700 / 500);
+  const padding = 10;
+
+  const circleSize = gridWidth / gridSizeX - padding;
+  const totalWidth = gridSizeX * circleSize + (gridSizeX - 1) * padding;
+  const totalHeight = gridSizeY * circleSize + (gridSizeY - 1) * padding;
+
+  // Centralize the grid based on the new canvas size
+  const startX = (width - totalWidth) / 2 + offsetX;
+  const startY = (height - totalHeight) / 2 + offsetY;
+
+  for (let i = 0; i < gridSizeX; i++) {
+    for (let j = 0; j < gridSizeY; j++) {
+      const x = startX + i * (circleSize + padding);
+      const y = startY + j * (circleSize + padding);
+      let totalSteps;
+      switch (direction) {
+        case "horizontal":
+          totalSteps = gridSizeX;
+          break;
+        case "vertical":
+          totalSteps = gridSizeY;
+          break;
+        case "diagonal":
+          totalSteps = gridSizeX + gridSizeY - 1;
+          break;
+      }
+
+      const step = calculateStep(i, j, gridSizeX, gridSizeY, direction);
+      const fillColor = getGradientColor(
+        selectedCombination.start,
+        selectedCombination.end,
+        totalSteps,
+        step
+      );
+      noStroke();
+      fill(fillColor);
+
+      // Draw different shapes based on shapeType
+      switch (shapeType) {
+        case "circle":
+          ellipse(x, y, circleSize, circleSize);
+          break;
+        case "half-circle":
+          arc(x, y, circleSize, circleSize, 0, PI);
+          break;
+        case "triangle":
+          triangle(
+            x,
+            y - circleSize / 2,
+            x - circleSize / 2,
+            y + circleSize / 2,
+            x + circleSize / 2,
+            y + circleSize / 2
+          );
+          break;
+        case "square":
+          // Draw a square
+          rect(x - circleSize / 2, y - circleSize / 2, circleSize, circleSize);
+          break;
+      }
+    }
+  }
 }
 
 const Combination1 = [
@@ -41,68 +160,21 @@ const Combination3 = [
   { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
 ];
 
-function draw() {
-  background(40);
-  blendMode(ADD);
+const Combination4 = [
+  { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
+];
 
-  let offsetX = offsetMagnitude * cos(offsetAngle);
-  let offsetY = offsetMagnitude * sin(offsetAngle);
+const Combination5 = [
+  { start: "#6A0DAD", end: "#D8BFD8" }, // Purple to Thistle
+  { start: "#FF6347", end: "#FFA07A" }, // Tomato to Light Salmon
+  { start: "#40E0D0", end: "#AFEEEE" }, // Turquoise to Pale Turquoise
+];
 
-  // Draw three grids with different offsets and color combinations
-  drawGrid(offsetX, offsetY, colorIndex, Combination2); // Second grid with complementary colors
-  drawGrid(0, 0, colorIndex, Combination1); // First grid with main colors
-  drawGrid(-offsetX, -offsetY, colorIndex, Combination3); // Third grid with its own color scheme
-
-  blendMode(ADD); // Reset blend mode after drawing grids
-}
-
-function drawGrid(offsetX, offsetY, colorIndex, colorCombinations) {
-  let selectedCombination = colorCombinations[colorIndex];
-
-  const aspectRatio = width / height;
-  const gridWidth = width * 0.75;
-  const gridHeight = gridWidth / aspectRatio;
-  const gridSizeX = 10;
-  const gridSizeY = gridSizeX / aspectRatio;
-  const padding = 10;
-
-  const circleSize = gridWidth / gridSizeX - padding;
-  const totalWidth = gridSizeX * (circleSize + padding);
-  const totalHeight = gridSizeY * (circleSize + padding);
-  const startX = (width - totalWidth + padding) / 2 + offsetX;
-  const startY = (height - totalHeight + padding) / 2 + offsetY;
-
-  for (let i = 0; i < gridSizeX; i++) {
-    for (let j = 0; j < gridSizeY; j++) {
-      const x = startX + i * (circleSize + padding);
-      const y = startY + j * (circleSize + padding);
-
-      let totalSteps;
-      switch (direction) {
-        case "horizontal":
-          totalSteps = gridSizeX;
-          break;
-        case "vertical":
-          totalSteps = gridSizeY;
-          break;
-        case "diagonal":
-          totalSteps = gridSizeX + gridSizeY - 1;
-          break;
-      }
-
-      const step = calculateStep(i, j, gridSizeX, gridSizeY, direction);
-      const fillColor = getGradientColor(
-        selectedCombination.start,
-        selectedCombination.end,
-        totalSteps,
-        step
-      );
-      noStroke();
-      fill(fillColor);
-      ellipse(x, y, circleSize, circleSize);
-    }
-  }
-}
+const Combination6 = [
+  { start: "#3CB371", end: "#8FBC8F" }, // Medium Sea Green to Dark Sea Green
+  { start: "#FFD700", end: "#FFFACD" }, // Gold to Lemon Chiffon
+  { start: "#00CED1", end: "#E0FFFF" }, // Dark Turquoise to Light Cyan
+];
 
 function getGradientColor(startColor, endColor, totalSteps, step) {
   // Adjust the step based on the gradient strength
