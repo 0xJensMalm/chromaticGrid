@@ -5,8 +5,11 @@ let gridPadding = 150; // Padding from the canvas edges
 
 const numLayers = 3; // Use this variable to control the number of grids
 
+const gridModes = ["rectangular", "circular", "triangular"];
+let gridMode;
+
 let baseOffsetStep = 10; // Base step in pixels for offsets
-let maxOffsetMultiplier = 1; // Maximum multiplier for baseOffsetStep
+let maxOffsetMultiplier = 3; // Maximum multiplier for baseOffsetStep
 
 const gradientDirections = ["horizontal", "vertical"];
 let direction; // Shared gradient direction for all grids
@@ -25,6 +28,7 @@ function setup() {
 
   // Since colorIndex is used globally, you might initialize it here if needed
   colorIndex = floor(random(selectedCombination.length));
+  gridMode = random(gridModes);
 }
 
 function draw() {
@@ -47,7 +51,7 @@ function draw() {
     console.log(
       `Layer ${
         i + 1
-      }: Combination ${selectedKey}, Shape ${shapeType}, Offset X ${offsetX.toFixed(
+      }: Colors: ${selectedKey}, Shape ${shapeType}, Offset X ${offsetX.toFixed(
         2
       )}, Offset Y ${offsetY.toFixed(2)}`
     );
@@ -73,57 +77,155 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
   const startX = (width - totalWidth) / 2 + offsetX;
   const startY = (height - totalHeight) / 2 + offsetY;
 
+  switch (gridMode) {
+    case "rectangular":
+      drawRectangularGrid(
+        startX,
+        startY,
+        gridSizeX,
+        gridSizeY,
+        circleSize,
+        padding,
+        shapeType,
+        selectedCombination
+      );
+      break;
+    case "circular":
+      drawCircularGrid(
+        offsetX,
+        offsetY,
+        gridSizeX,
+        circleSize,
+        padding,
+        shapeType,
+        selectedCombination
+      );
+      break;
+    case "triangular":
+      drawTriangularGrid(
+        startX,
+        startY,
+        gridSizeX,
+        circleSize,
+        padding,
+        shapeType,
+        selectedCombination
+      );
+      break;
+  }
+}
+
+function drawRectangularGrid(
+  startX,
+  startY,
+  gridSizeX,
+  gridSizeY,
+  circleSize,
+  padding,
+  shapeType,
+  selectedCombination
+) {
   for (let i = 0; i < gridSizeX; i++) {
     for (let j = 0; j < gridSizeY; j++) {
       const x = startX + i * (circleSize + padding);
       const y = startY + j * (circleSize + padding);
-      let totalSteps;
-      switch (direction) {
-        case "horizontal":
-          totalSteps = gridSizeX;
-          break;
-        case "vertical":
-          totalSteps = gridSizeY;
-          break;
-        case "diagonal":
-          totalSteps = gridSizeX + gridSizeY - 1;
-          break;
-      }
-
       const step = calculateStep(i, j, gridSizeX, gridSizeY, direction);
       const fillColor = getGradientColor(
         selectedCombination.start,
         selectedCombination.end,
-        totalSteps,
+        gridSizeX,
         step
       );
       noStroke();
       fill(fillColor);
-
-      // Draw different shapes based on shapeType
-      switch (shapeType) {
-        case "circle":
-          ellipse(x, y, circleSize, circleSize);
-          break;
-        case "half-circle":
-          arc(x, y, circleSize, circleSize, 0, PI);
-          break;
-        case "triangle":
-          triangle(
-            x,
-            y - circleSize / 2,
-            x - circleSize / 2,
-            y + circleSize / 2,
-            x + circleSize / 2,
-            y + circleSize / 2
-          );
-          break;
-        case "square":
-          // Draw a square
-          rect(x - circleSize / 2, y - circleSize / 2, circleSize, circleSize);
-          break;
-      }
+      drawShape(x, y, circleSize, shapeType);
     }
+  }
+}
+
+function drawCircularGrid(
+  offsetX,
+  offsetY,
+  gridSizeX,
+  circleSize,
+  padding,
+  shapeType,
+  selectedCombination
+) {
+  const centerX = width / 2 + offsetX;
+  const centerY = height / 2 + offsetY;
+  const radius = (gridSizeX * (circleSize + padding)) / 2;
+
+  for (let i = 0; i < gridSizeX; i++) {
+    for (let j = 0; j < gridSizeX; j++) {
+      const angle = (TWO_PI / gridSizeX) * j;
+      const x = centerX + cos(angle) * radius;
+      const y = centerY + sin(angle) * radius;
+      const step = calculateStep(i, j, gridSizeX, gridSizeX, direction);
+      const fillColor = getGradientColor(
+        selectedCombination.start,
+        selectedCombination.end,
+        gridSizeX,
+        step
+      );
+      noStroke();
+      fill(fillColor);
+      drawShape(x, y, circleSize, shapeType);
+    }
+  }
+}
+
+function drawTriangularGrid(
+  startX,
+  startY,
+  gridSizeX,
+  circleSize,
+  padding,
+  shapeType,
+  selectedCombination
+) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  for (let i = 0; i < gridSizeX; i++) {
+    for (let j = 0; j <= i; j++) {
+      const x =
+        centerX + j * (circleSize + padding) - (i * (circleSize + padding)) / 2;
+      const y = startY + i * (circleSize + padding);
+      const step = calculateStep(i, j, gridSizeX, gridSizeX, direction);
+      const fillColor = getGradientColor(
+        selectedCombination.start,
+        selectedCombination.end,
+        gridSizeX,
+        step
+      );
+      noStroke();
+      fill(fillColor);
+      drawShape(x, y, circleSize, shapeType);
+    }
+  }
+}
+
+function drawShape(x, y, size, shapeType) {
+  switch (shapeType) {
+    case "circle":
+      ellipse(x, y, size, size);
+      break;
+    case "half-circle":
+      arc(x, y, size, size, 0, PI);
+      break;
+    case "triangle":
+      triangle(
+        x,
+        y - size / 2,
+        x - size / 2,
+        y + size / 2,
+        x + size / 2,
+        y + size / 2
+      );
+      break;
+    case "square":
+      rect(x - size / 2, y - size / 2, size, size);
+      break;
   }
 }
 
@@ -205,7 +307,7 @@ function hexToRgb(hex) {
   }
   return { r, g, b };
 }
-function calculateStep(i, j, gridSizeX, gridSizeY, direction) {
+function calculateStep(i, j, direction) {
   switch (direction) {
     case "horizontal":
       return i; // Step based on horizontal position
@@ -219,7 +321,7 @@ function calculateStep(i, j, gridSizeX, gridSizeY, direction) {
   }
 }
 
-function calculateOffset(layerIndex) {
+function calculateOffset() {
   let multiplier = floor(random(maxOffsetMultiplier + 1)); // from 0 to maxOffsetMultiplier
   let offsetX = multiplier * baseOffsetStep * cos(offsetAngle);
   let offsetY = multiplier * baseOffsetStep * sin(offsetAngle);
