@@ -3,23 +3,28 @@ let colorIndex;
 let gradientStrength = 100;
 let gridPadding = 150; // Padding from the canvas edges
 
-const numLayers = 2; // Use this variable to control the number of grids
+const numLayers = 3; // Use this variable to control the number of grids
 
-let offsetRange1 = 0; // Offset range for the first grid
-let offsetRange2 = 1; // Offset range for the second grid
-let offsetRange3 = 2; // Offset range for the third grid
+let baseOffsetStep = 10; // Base step in pixels for offsets
+let maxOffsetMultiplier = 1; // Maximum multiplier for baseOffsetStep
 
 const gradientDirections = ["horizontal", "vertical"];
 let direction; // Shared gradient direction for all grids
-
-let offsetSteps = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]; // Steps in pixels
 
 function setup() {
   createCanvas(500 + 2 * gridPadding, 700 + 2 * gridPadding);
   noLoop();
   offsetAngle = PI / 4;
   direction = random(gradientDirections);
-  colorIndex = floor(random(Combination1.length));
+
+  // Retrieve combinations and set a default index
+  const colorCombinations = getColorCombinations();
+  const combinationKeys = Object.keys(colorCombinations); // Get combination names
+  let selectedKey = random(combinationKeys); // Select a random key (combination name)
+  let selectedCombination = colorCombinations[selectedKey];
+
+  // Since colorIndex is used globally, you might initialize it here if needed
+  colorIndex = floor(random(selectedCombination.length));
 }
 
 function draw() {
@@ -27,35 +32,24 @@ function draw() {
   blendMode(ADD);
 
   const shapes = ["circle", "half-circle", "triangle", "square"];
-  const combinationSets = [
-    Combination1,
-    Combination2,
-    Combination3,
-    Combination4,
-    Combination5,
-    Combination6,
-  ];
+  const colorCombinations = getColorCombinations();
+  const combinationKeys = Object.keys(colorCombinations); // Get combination names
 
-  // Loop over the number of layers and draw each grid
   for (let i = 0; i < numLayers; i++) {
-    let offsetX = random(offsetSteps) * cos(offsetAngle);
-    let offsetY = random(offsetSteps) * sin(offsetAngle);
+    const { offsetX, offsetY } = calculateOffset(i);
     let shapeType = random(shapes);
-    let selectedCombination = random(combinationSets);
+    let selectedKey = random(combinationKeys); // Select a random key (combination name)
+    let selectedCombination = colorCombinations[selectedKey];
     let colorIndex = floor(random(selectedCombination.length));
 
     drawGrid(offsetX, offsetY, colorIndex, selectedCombination, shapeType);
 
-    // Console output for debugging
     console.log(
-      `Layer ${i + 1} Color:`,
-      selectedCombination[colorIndex].start,
-      "Shape:",
-      shapeType,
-      "Offset X:",
-      offsetX,
-      "Offset Y:",
-      offsetY
+      `Layer ${
+        i + 1
+      }: Combination ${selectedKey}, Shape ${shapeType}, Offset X ${offsetX.toFixed(
+        2
+      )}, Offset Y ${offsetY.toFixed(2)}`
     );
   }
 
@@ -133,48 +127,47 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
   }
 }
 
-const Combination1 = [
-  { start: "#FF0000", end: "#E00000" }, // Red to Darker Red
-  { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
-  { start: "#FFA500", end: "#E09500" }, // Orange to Darker Orange
-  { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
-  { start: "#FF69B4", end: "#E06090" }, // Hot Pink to Darker Hot Pink
-  { start: "#00FFFF", end: "#00E0E0" }, // Cyan to Darker Cyan
-];
-
-const Combination2 = [
-  { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
-  { start: "#800080", end: "#700070" }, // Purple to Darker Purple
-  { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
-  { start: "#FFD700", end: "#E0C300" }, // Gold to Darker Gold
-  { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
-  { start: "#BA55D3", end: "#A050C0" }, // Medium Orchid to Darker Medium Orchid
-];
-
-const Combination3 = [
-  { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
-  { start: "#FF00FF", end: "#E000E0" }, // Magenta to Darker Magenta
-  { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
-  { start: "#1E90FF", end: "#1A80E0" }, // Dodger Blue to Darker Dodger Blue
-  { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
-  { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
-];
-
-const Combination4 = [
-  { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
-];
-
-const Combination5 = [
-  { start: "#6A0DAD", end: "#D8BFD8" }, // Purple to Thistle
-  { start: "#FF6347", end: "#FFA07A" }, // Tomato to Light Salmon
-  { start: "#40E0D0", end: "#AFEEEE" }, // Turquoise to Pale Turquoise
-];
-
-const Combination6 = [
-  { start: "#3CB371", end: "#8FBC8F" }, // Medium Sea Green to Dark Sea Green
-  { start: "#FFD700", end: "#FFFACD" }, // Gold to Lemon Chiffon
-  { start: "#00CED1", end: "#E0FFFF" }, // Dark Turquoise to Light Cyan
-];
+function getColorCombinations() {
+  return {
+    Combination1: [
+      { start: "#FF0000", end: "#E00000" }, // Red to Darker Red
+      { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
+      { start: "#FFA500", end: "#E09500" }, // Orange to Darker Orange
+      { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
+      { start: "#FF69B4", end: "#E06090" }, // Hot Pink to Darker Hot Pink
+      { start: "#00FFFF", end: "#00E0E0" }, // Cyan to Darker Cyan
+    ],
+    Combination2: [
+      { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
+      { start: "#800080", end: "#700070" }, // Purple to Darker Purple
+      { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue again
+      { start: "#FFD700", end: "#E0C300" }, // Gold to Darker Gold
+      { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
+      { start: "#BA55D3", end: "#A050C0" }, // Medium Orchid to Darker Medium Orchid
+    ],
+    Combination3: [
+      { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
+      { start: "#FF00FF", end: "#E000E0" }, // Magenta to Darker Magenta
+      { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
+      { start: "#1E90FF", end: "#1A80E0" }, // Dodger Blue to Darker Dodger Blue
+      { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
+      { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
+    ],
+    Combination4: [
+      { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
+    ],
+    Combination5: [
+      { start: "#6A0DAD", end: "#D8BFD8" }, // Purple to Thistle
+      { start: "#FF6347", end: "#FFA07A" }, // Tomato to Light Salmon
+      { start: "#40E0D0", end: "#AFEEEE" }, // Turquoise to Pale Turquoise
+    ],
+    Combination6: [
+      { start: "#3CB371", end: "#8FBC8F" }, // Medium Sea Green to Dark Sea Green
+      { start: "#FFD700", end: "#FFFACD" }, // Gold to Lemon Chiffon
+      { start: "#00CED1", end: "#E0FFFF" }, // Dark Turquoise to Light Cyan
+    ],
+  };
+}
 
 function getGradientColor(startColor, endColor, totalSteps, step) {
   // Adjust the step based on the gradient strength
@@ -212,7 +205,6 @@ function hexToRgb(hex) {
   }
   return { r, g, b };
 }
-
 function calculateStep(i, j, gridSizeX, gridSizeY, direction) {
   switch (direction) {
     case "horizontal":
@@ -220,8 +212,16 @@ function calculateStep(i, j, gridSizeX, gridSizeY, direction) {
     case "vertical":
       return j; // Step based on vertical position
     case "diagonal":
+      // Assuming a simple diagonal where we sum the indices
       return i + j; // Step based on the sum of positions (diagonal)
     default:
       return 0; // Default case, should not be reached
   }
+}
+
+function calculateOffset(layerIndex) {
+  let multiplier = floor(random(maxOffsetMultiplier + 1)); // from 0 to maxOffsetMultiplier
+  let offsetX = multiplier * baseOffsetStep * cos(offsetAngle);
+  let offsetY = multiplier * baseOffsetStep * sin(offsetAngle);
+  return { offsetX, offsetY };
 }
