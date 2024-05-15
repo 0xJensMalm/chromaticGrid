@@ -1,21 +1,26 @@
 let offsetAngle;
 let colorIndex;
-let gradientStrength = 100;
-let gridPadding = 150; // Padding from the canvas edges
+let gridMode;
+let direction;
+let scaleFactor;
 
-const numLayers = 3; // Use this variable to control the number of grids
+let baseWidth = 500;
+let baseHeight = 700;
+
+const numLayers = 5;
+
+let gridPadding = 100;
 
 const gridModes = ["rectangular", "circular", "triangular"];
-let gridMode;
 
-let baseOffsetStep = 10; // Base step in pixels for offsets
+let baseOffsetStep = 10;
 let maxOffsetMultiplier = 3; // Maximum multiplier for baseOffsetStep
 
+let gradientStrength = 100;
 const gradientDirections = ["horizontal", "vertical"];
-let direction; // Shared gradient direction for all grids
 
 function setup() {
-  createCanvas(500 + 2 * gridPadding, 700 + 2 * gridPadding);
+  resizeSketchCanvas();
   noLoop();
   offsetAngle = PI / 4;
   direction = random(gradientDirections);
@@ -63,11 +68,11 @@ function draw() {
 function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
   let selectedCombination = colorCombinations[colorIndex];
 
-  const gridWidth = 375; // Fixed grid width
-  const gridHeight = gridWidth * (700 / 500); // Aspect ratio based on initial setup
+  const gridWidth = 375 * scaleFactor; // Scaled grid width
+  const gridHeight = gridWidth * (baseHeight / baseWidth); // Aspect ratio based on initial setup
   const gridSizeX = 12;
-  const gridSizeY = gridSizeX * (700 / 500);
-  const padding = 10;
+  const gridSizeY = gridSizeX * (baseHeight / baseWidth);
+  const padding = 10 * scaleFactor; // Scaled padding
 
   const circleSize = gridWidth / gridSizeX - padding;
   const totalWidth = gridSizeX * circleSize + (gridSizeX - 1) * padding;
@@ -326,4 +331,23 @@ function calculateOffset() {
   let offsetX = multiplier * baseOffsetStep * cos(offsetAngle);
   let offsetY = multiplier * baseOffsetStep * sin(offsetAngle);
   return { offsetX, offsetY };
+}
+function windowResized() {
+  resizeSketchCanvas();
+  redraw();
+}
+
+function resizeSketchCanvas() {
+  const aspectRatio = baseWidth / baseHeight;
+  let newWidth = windowWidth - 2 * gridPadding;
+  let newHeight = windowHeight - 2 * gridPadding;
+
+  if (newWidth / newHeight > aspectRatio) {
+    newWidth = newHeight * aspectRatio;
+  } else {
+    newHeight = newWidth / aspectRatio;
+  }
+
+  scaleFactor = newWidth / baseWidth;
+  createCanvas(newWidth + 2 * gridPadding, newHeight + 2 * gridPadding);
 }
