@@ -4,12 +4,12 @@ let gridMode;
 let direction;
 let scaleFactor;
 
-let baseWidth = 500;
-let baseHeight = 700;
+let baseWidth = 600; // Increased base width
+let baseHeight = 600; // Increased base height
 
-const numLayers = 5;
+const numLayers = 3;
 
-let gridPadding = 100;
+let gridPadding = 50;
 
 const gridModes = ["rectangular", "circular", "triangular"];
 
@@ -21,6 +21,7 @@ const gradientDirections = ["horizontal", "vertical"];
 
 function setup() {
   resizeSketchCanvas();
+  pixelDensity(10); // Set higher pixel density for better quality
   noLoop();
   offsetAngle = PI / 4;
   direction = random(gradientDirections);
@@ -134,7 +135,7 @@ function drawRectangularGrid(
     for (let j = 0; j < gridSizeY; j++) {
       const x = startX + i * (circleSize + padding);
       const y = startY + j * (circleSize + padding);
-      const step = calculateStep(i, j, gridSizeX, gridSizeY, direction);
+      const step = calculateStep(i, j, direction);
       const fillColor = getGradientColor(
         selectedCombination.start,
         selectedCombination.end,
@@ -166,7 +167,7 @@ function drawCircularGrid(
       const angle = (TWO_PI / gridSizeX) * j;
       const x = centerX + cos(angle) * radius;
       const y = centerY + sin(angle) * radius;
-      const step = calculateStep(i, j, gridSizeX, gridSizeX, direction);
+      const step = calculateStep(i, j, direction);
       const fillColor = getGradientColor(
         selectedCombination.start,
         selectedCombination.end,
@@ -196,7 +197,7 @@ function drawTriangularGrid(
       const x =
         centerX + j * (circleSize + padding) - (i * (circleSize + padding)) / 2;
       const y = startY + i * (circleSize + padding);
-      const step = calculateStep(i, j, gridSizeX, gridSizeX, direction);
+      const step = calculateStep(i, j, direction);
       const fillColor = getGradientColor(
         selectedCombination.start,
         selectedCombination.end,
