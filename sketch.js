@@ -9,11 +9,10 @@ let baseHeight = 600; // Increased base height
 
 const numLayers = 3;
 
-let gridPadding = 50;
+let gridPadding = 20;
 
-const gridModes = ["rectangular", "circular", "triangular"];
+const gridModes = ["rectangular", "reverseTriangular", "triangular"];
 
-let baseOffsetStep = 10;
 let maxOffsetMultiplier = 3; // Maximum multiplier for baseOffsetStep
 
 let gradientStrength = 100;
@@ -25,6 +24,9 @@ function setup() {
   noLoop();
   offsetAngle = PI / 4;
   direction = random(gradientDirections);
+
+  horizontalOffsetStep = random([10]);
+  verticalOffsetStep = random([10, 20, 30, 40, 50, 60, 70, 80]);
 
   // Retrieve combinations and set a default index
   const colorCombinations = getColorCombinations();
@@ -38,7 +40,7 @@ function setup() {
 }
 
 function draw() {
-  background(20);
+  background(30);
   blendMode(ADD);
 
   const shapes = ["circle", "half-circle", "triangle", "square"];
@@ -65,8 +67,6 @@ function draw() {
 
   blendMode(BLEND);
 }
-
-let circularGridLayers = 3; // Example value for number of layers
 
 function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
   let selectedCombination = colorCombinations[colorIndex];
@@ -98,18 +98,15 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
         selectedCombination
       );
       break;
-    case "circular":
-      const customPadding = 20; // Custom padding for the circular grid
-      const numberOfLayers = 2; // Number of layers for the circular grid
-      drawCircularGrid(
-        offsetX,
-        offsetY,
+    case "reverseTriangular":
+      drawReverseTriangularGrid(
+        startX,
+        startY,
         gridSizeX,
         circleSize,
+        padding,
         shapeType,
-        selectedCombination,
-        customPadding, // Pass custom padding here
-        numberOfLayers // Pass number of layers here
+        selectedCombination
       );
       break;
     case "triangular":
@@ -154,43 +151,6 @@ function drawRectangularGrid(
   }
 }
 
-function drawCircularGrid(
-  offsetX,
-  offsetY,
-  gridSizeX,
-  circleSize,
-  shapeType,
-  selectedCombination,
-  customPadding, // Custom padding for the circular grid
-  numberOfLayers // Number of layers for the circular grid
-) {
-  const centerX = width / 2 + offsetX;
-  const centerY = height / 2 + offsetY;
-
-  for (let layer = 1; layer <= numberOfLayers; layer++) {
-    const radius = layer * (circleSize + customPadding); // Ensure expansion based on the number of layers and custom padding
-    const shapesInLayer = floor(
-      (TWO_PI * radius) / (circleSize + customPadding)
-    );
-
-    for (let i = 0; i < shapesInLayer; i++) {
-      const angle = (TWO_PI / shapesInLayer) * i;
-      const x = centerX + cos(angle) * radius;
-      const y = centerY + sin(angle) * radius;
-      const step = calculateStep(layer, i, direction);
-      const fillColor = getGradientColor(
-        selectedCombination.start,
-        selectedCombination.end,
-        numberOfLayers,
-        layer
-      );
-      noStroke();
-      fill(fillColor);
-      drawShape(x, y, circleSize, shapeType);
-    }
-  }
-}
-
 function drawTriangularGrid(
   startX,
   startY,
@@ -207,6 +167,36 @@ function drawTriangularGrid(
       const x =
         centerX + j * (circleSize + padding) - (i * (circleSize + padding)) / 2;
       const y = startY + i * (circleSize + padding);
+      const step = calculateStep(i, j, direction);
+      const fillColor = getGradientColor(
+        selectedCombination.start,
+        selectedCombination.end,
+        gridSizeX,
+        step
+      );
+      noStroke();
+      fill(fillColor);
+      drawShape(x, y, circleSize, shapeType);
+    }
+  }
+}
+
+function drawReverseTriangularGrid(
+  startX,
+  startY,
+  gridSizeX,
+  circleSize,
+  padding,
+  shapeType,
+  selectedCombination
+) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  for (let i = gridSizeX - 1; i >= 0; i--) {
+    for (let j = 0; j <= i; j++) {
+      const x =
+        centerX + j * (circleSize + padding) - (i * (circleSize + padding)) / 2;
+      const y = startY + (gridSizeX - 1 - i) * (circleSize + padding);
       const step = calculateStep(i, j, direction);
       const fillColor = getGradientColor(
         selectedCombination.start,
@@ -339,10 +329,11 @@ function calculateStep(i, j, direction) {
 
 function calculateOffset() {
   let multiplier = floor(random(maxOffsetMultiplier + 1)); // from 0 to maxOffsetMultiplier
-  let offsetX = multiplier * baseOffsetStep * cos(offsetAngle);
-  let offsetY = multiplier * baseOffsetStep * sin(offsetAngle);
+  let offsetX = multiplier * horizontalOffsetStep * cos(offsetAngle);
+  let offsetY = multiplier * verticalOffsetStep * sin(offsetAngle);
   return { offsetX, offsetY };
 }
+
 function windowResized() {
   resizeSketchCanvas();
   redraw();
