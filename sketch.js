@@ -66,6 +66,8 @@ function draw() {
   blendMode(BLEND);
 }
 
+let circularGridLayers = 3; // Example value for number of layers
+
 function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
   let selectedCombination = colorCombinations[colorIndex];
 
@@ -73,7 +75,7 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
   const gridHeight = gridWidth * (baseHeight / baseWidth); // Aspect ratio based on initial setup
   const gridSizeX = 12;
   const gridSizeY = gridSizeX * (baseHeight / baseWidth);
-  const padding = 10 * scaleFactor; // Scaled padding
+  const padding = 8 * scaleFactor; // Global padding
 
   const circleSize = gridWidth / gridSizeX - padding;
   const totalWidth = gridSizeX * circleSize + (gridSizeX - 1) * padding;
@@ -97,14 +99,17 @@ function drawGrid(offsetX, offsetY, colorIndex, colorCombinations, shapeType) {
       );
       break;
     case "circular":
+      const customPadding = 20; // Custom padding for the circular grid
+      const numberOfLayers = 2; // Number of layers for the circular grid
       drawCircularGrid(
         offsetX,
         offsetY,
         gridSizeX,
         circleSize,
-        padding,
         shapeType,
-        selectedCombination
+        selectedCombination,
+        customPadding, // Pass custom padding here
+        numberOfLayers // Pass number of layers here
       );
       break;
     case "triangular":
@@ -154,25 +159,30 @@ function drawCircularGrid(
   offsetY,
   gridSizeX,
   circleSize,
-  padding,
   shapeType,
-  selectedCombination
+  selectedCombination,
+  customPadding, // Custom padding for the circular grid
+  numberOfLayers // Number of layers for the circular grid
 ) {
   const centerX = width / 2 + offsetX;
   const centerY = height / 2 + offsetY;
-  const radius = (gridSizeX * (circleSize + padding)) / 2;
 
-  for (let i = 0; i < gridSizeX; i++) {
-    for (let j = 0; j < gridSizeX; j++) {
-      const angle = (TWO_PI / gridSizeX) * j;
+  for (let layer = 1; layer <= numberOfLayers; layer++) {
+    const radius = layer * (circleSize + customPadding); // Ensure expansion based on the number of layers and custom padding
+    const shapesInLayer = floor(
+      (TWO_PI * radius) / (circleSize + customPadding)
+    );
+
+    for (let i = 0; i < shapesInLayer; i++) {
+      const angle = (TWO_PI / shapesInLayer) * i;
       const x = centerX + cos(angle) * radius;
       const y = centerY + sin(angle) * radius;
-      const step = calculateStep(i, j, direction);
+      const step = calculateStep(layer, i, direction);
       const fillColor = getGradientColor(
         selectedCombination.start,
         selectedCombination.end,
-        gridSizeX,
-        step
+        numberOfLayers,
+        layer
       );
       noStroke();
       fill(fillColor);
@@ -351,4 +361,10 @@ function resizeSketchCanvas() {
 
   scaleFactor = newWidth / baseWidth;
   createCanvas(newWidth + 2 * gridPadding, newHeight + 2 * gridPadding);
+}
+
+function keyPressed() {
+  if (key === "N" || key === "n") {
+    window.location.reload();
+  }
 }
