@@ -18,7 +18,6 @@ new p5((sketch) => {
   const shapes = ["circle", "half-circle", "triangle", "square"];
 
   let animationSpeed = 0.03;
-  let isAnimating = false;
   let animationProgress = 0;
   let movingToCenter = true;
   let initialShapes = [];
@@ -28,6 +27,7 @@ new p5((sketch) => {
 
   sketch.setup = function () {
     resizeSketchCanvas();
+    canvas.id("myCanvas");
     sketch.pixelDensity(10); // Set higher pixel density for better quality
     sketch.noLoop();
     offsetAngle = sketch.PI / 4;
@@ -37,13 +37,11 @@ new p5((sketch) => {
     horizontalOffsetStep = randomChoice([6, 12, 24]);
     verticalOffsetStep = randomChoice([10, 20, 30, 40, 50, 60]);
 
-    // Retrieve combinations and set a default index
     const colorCombinations = getColorCombinations();
-    const combinationKeys = Object.keys(colorCombinations); // Get combination names
-    selectedKey = randomChoice(combinationKeys); // Select a random key (combination name)
-    let selectedCombination = colorCombinations[selectedKey];
+    const selectedCombinationObj = weightedRandomChoice(colorCombinations); // Select a random combination based on weights
+    selectedKey = selectedCombinationObj.name; // Get the name of the selected combination
+    let selectedCombination = selectedCombinationObj.colors;
 
-    // Since colorIndex is used globally, you might initialize it here if needed
     colorIndex = Math.floor($fx.rand() * selectedCombination.length);
     gridMode = randomChoice(gridModes);
 
@@ -57,7 +55,6 @@ new p5((sketch) => {
       cellShapes: [], // Placeholder, will be filled dynamically
     });
 
-    // Store initial shapes, offsets, and color indices
     for (let i = 0; i < numLayers; i++) {
       const { offsetX, offsetY } = calculateOffset(i);
       let shapeType = randomChoice(shapes);
@@ -289,58 +286,133 @@ new p5((sketch) => {
   }
 
   function getColorCombinations() {
-    return {
-      Combination1: [
-        { start: "#FF0000", end: "#E00000" }, // Red to Darker Red
-        { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
-        { start: "#FFA500", end: "#E09500" }, // Orange to Darker Orange
-        { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
-        { start: "#FF69B4", end: "#E06090" }, // Hot Pink to Darker Hot Pink
-        { start: "#00FFFF", end: "#00E0E0" }, // Cyan to Darker Cyan
-      ],
-      Combination2: [
-        { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
-        { start: "#800080", end: "#700070" }, // Purple to Darker Purple
-        { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue again
-        { start: "#FFD700", end: "#E0C300" }, // Gold to Darker Gold
-        { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
-        { start: "#BA55D3", end: "#A050C0" }, // Medium Orchid to Darker Medium Orchid
-      ],
-      Combination3: [
-        { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
-        { start: "#FF00FF", end: "#E000E0" }, // Magenta to Darker Magenta
-        { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
-        { start: "#1E90FF", end: "#1A80E0" }, // Dodger Blue to Darker Dodger Blue
-        { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
-        { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
-      ],
-      Monochrome: [
-        { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
-      ],
-      Combination5: [
-        { start: "#6A0DAD", end: "#D8BFD8" }, // Purple to Thistle
-        { start: "#FF6347", end: "#FFA07A" }, // Tomato to Light Salmon
-        { start: "#40E0D0", end: "#AFEEEE" }, // Turquoise to Pale Turquoise
-      ],
-      Combination6: [
-        { start: "#3CB371", end: "#8FBC8F" }, // Medium Sea Green to Dark Sea Green
-        { start: "#FFD700", end: "#FFFACD" }, // Gold to Lemon Chiffon
-        { start: "#00CED1", end: "#E0FFFF" }, // Dark Turquoise to Light Cyan
-      ],
-    };
+    return [
+      {
+        name: "Capella",
+        weight: 0.15,
+        colors: [
+          { start: "#FF0000", end: "#E00000" }, // Red to Darker Red
+          { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
+          { start: "#FFA500", end: "#E09500" }, // Orange to Darker Orange
+          { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
+          { start: "#FF69B4", end: "#E06090" }, // Hot Pink to Darker Hot Pink
+          { start: "#00FFFF", end: "#00E0E0" }, // Cyan to Darker Cyan
+        ],
+      },
+      {
+        name: "Byzantium",
+        weight: 0.15,
+        colors: [
+          { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
+          { start: "#800080", end: "#700070" }, // Purple to Darker Purple
+          { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue again
+          { start: "#FFD700", end: "#E0C300" }, // Gold to Darker Gold
+          { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
+          { start: "#BA55D3", end: "#A050C0" }, // Medium Orchid to Darker Medium Orchid
+        ],
+      },
+      {
+        name: "Istanbul",
+        weight: 0.15,
+        colors: [
+          { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
+          { start: "#FF00FF", end: "#E000E0" }, // Magenta to Darker Magenta
+          { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
+          { start: "#1E90FF", end: "#1A80E0" }, // Dodger Blue to Darker Dodger Blue
+          { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
+          { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
+        ],
+      },
+      {
+        name: "Berlin",
+        weight: 0.15,
+        colors: [
+          { start: "#6A0DAD", end: "#D8BFD8" }, // Purple to Thistle
+          { start: "#FF6347", end: "#FFA07A" }, // Tomato to Light Salmon
+          { start: "#40E0D0", end: "#AFEEEE" }, // Turquoise to Pale Turquoise
+        ],
+      },
+      {
+        name: "Paris",
+        weight: 0.15,
+        colors: [
+          { start: "#3CB371", end: "#8FBC8F" }, // Medium Sea Green to Dark Sea Green
+          { start: "#FFD700", end: "#FFFACD" }, // Gold to Lemon Chiffon
+          { start: "#00CED1", end: "#E0FFFF" }, // Dark Turquoise to Light Cyan
+        ],
+      },
+      {
+        name: "Shanghai",
+        weight: 0.15,
+        colors: [
+          { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
+          { start: "#8A2BE2", end: "#7A1BE2" }, // BlueViolet to Darker BlueViolet
+          { start: "#00FA9A", end: "#00E89A" }, // MediumSpringGreen to Darker MediumSpringGreen
+          { start: "#7FFF00", end: "#6FEF00" }, // Chartreuse to Darker Chartreuse
+          { start: "#D2691E", end: "#C2691E" }, // Chocolate to Darker Chocolate
+          { start: "#DC143C", end: "#CC143C" }, // Crimson to Darker Crimson
+        ],
+      },
+      {
+        name: "London",
+        weight: 0.15,
+        colors: [
+          { start: "#FF8C00", end: "#E08C00" }, // DarkOrange to Darker DarkOrange
+          { start: "#00BFFF", end: "#00AFFF" }, // DeepSkyBlue to Darker DeepSkyBlue
+          { start: "#8B0000", end: "#7B0000" }, // DarkRed to Darker DarkRed
+          { start: "#ADFF2F", end: "#9DFF2F" }, // GreenYellow to Darker GreenYellow
+          { start: "#FF69B4", end: "#E060A4" }, // HotPink to Darker HotPink
+          { start: "#4B0082", end: "#3B0072" }, // Indigo to Darker Indigo
+        ],
+      },
+      {
+        name: "Altair",
+        weight: 1,
+        colors: [
+          { start: "#ec1c24", end: "#04a4ec" },
+          { start: "#fcf404", end: "#24b44c" },
+          { start: "#fcf404", end: "#28287c" },
+          { start: "#fc7c24", end: "#24b44c" },
+        ],
+      },
+      {
+        name: "Monochrome White",
+        weight: 0.02,
+        colors: [
+          { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
+        ],
+      },
+      {
+        name: "Monochrome Azure",
+        weight: 0.02,
+        colors: [
+          { start: "#1c1e8a", end: "#1c1e8a" }, // Completely White
+        ],
+      },
+    ];
+  }
+
+  function weightedRandomChoice(array) {
+    let totalWeight = array.reduce((sum, item) => sum + item.weight, 0);
+    let randomNum = $fx.rand() * totalWeight;
+
+    for (let i = 0; i < array.length; i++) {
+      if (randomNum < array[i].weight) {
+        return array[i];
+      }
+      randomNum -= array[i].weight;
+    }
+    return array[array.length - 1]; // Return the last element as a fallback
   }
 
   function getGradientColor(startColor, endColor, totalSteps, step) {
-    // Adjust the step based on the gradient strength
     let adjustedStep = step / (totalSteps * (gradientStrength / 100));
 
-    // Ensure the adjusted step doesn't exceed 1
     adjustedStep = Math.min(adjustedStep, 1);
 
     let startRGB = hexToRgb(startColor);
     let endRGB = hexToRgb(endColor);
 
-    // Calculate the color for the current step
     let r = (endRGB.r - startRGB.r) * adjustedStep + startRGB.r;
     let g = (endRGB.g - startRGB.g) * adjustedStep + startRGB.g;
     let b = (endRGB.b - startRGB.b) * adjustedStep + startRGB.b;
