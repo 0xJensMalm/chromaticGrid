@@ -27,7 +27,8 @@ new p5((sketch) => {
 
   sketch.setup = function () {
     resizeSketchCanvas();
-    canvas.id("myCanvas");
+    let canvas = sketch.createCanvas(sketch.width, sketch.height); // Create the canvas
+    canvas.id("myCanvas"); // Assign the ID to the canvas
     sketch.pixelDensity(10); // Set higher pixel density for better quality
     sketch.noLoop();
     offsetAngle = sketch.PI / 4;
