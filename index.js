@@ -5,11 +5,11 @@ new p5((sketch) => {
   let scaleFactor;
   let selectedKey;
 
-  let baseWidth = 600; // Increased base width
-  let baseHeight = 600; // Increased base height
+  let baseWidth = 400; // Increased base width
+  let baseHeight = 400; // Increased base height
 
   const numLayers = 3;
-  let gridPadding = 20;
+  let gridPadding = 100;
 
   const gridModes = ["rectangular", "reverseTriangular", "triangular"];
   let maxOffsetMultiplier = 3; // Maximum multiplier for baseOffsetStep
@@ -24,6 +24,8 @@ new p5((sketch) => {
   let initialOffsets = [];
   let initialColors = [];
   let initialColorIndices = [];
+
+  let highResCanvas;
 
   sketch.setup = function () {
     resizeSketchCanvas();
@@ -66,11 +68,18 @@ new p5((sketch) => {
         Math.floor($fx.rand() * selectedCombination.length)
       ); // Store initial color indices
     }
+
+    // Create the hidden high-resolution canvas
+    highResCanvas = sketch.createGraphics(4000, 4000); // 10x the base size for higher resolution
   };
 
   sketch.draw = function () {
-    sketch.background(20);
-    sketch.blendMode(sketch.ADD);
+    renderToCanvas(sketch, sketch.width, sketch.height, scaleFactor);
+  };
+
+  function renderToCanvas(p, width, height, scale) {
+    p.background(20);
+    p.blendMode(p.ADD);
 
     const usedShapes = [];
     for (let i = 0; i < numLayers; i++) {
@@ -89,11 +98,15 @@ new p5((sketch) => {
       }
 
       drawGrid(
+        p,
         adjustedOffsetX,
         adjustedOffsetY,
         colorIndex,
         selectedCombination,
-        shapeType
+        shapeType,
+        width,
+        height,
+        scale
       );
     }
 
@@ -106,35 +119,40 @@ new p5((sketch) => {
       cellShapes: Array.from(new Set(usedShapes)).join(" - "), // Unique shapes
     });
 
-    sketch.blendMode(sketch.BLEND);
-  };
+    p.blendMode(p.BLEND);
+  }
 
   function drawGrid(
+    p,
     offsetX,
     offsetY,
     colorIndex,
     colorCombinations,
-    shapeType
+    shapeType,
+    width,
+    height,
+    scale
   ) {
     let selectedCombination = colorCombinations[colorIndex];
 
-    const gridWidth = 375 * scaleFactor; // Scaled grid width
+    const gridWidth = 375 * scale; // Scaled grid width
     const gridHeight = gridWidth * (baseHeight / baseWidth); // Aspect ratio based on initial setup
     const gridSizeX = 12;
     const gridSizeY = gridSizeX * (baseHeight / baseWidth);
-    const padding = 8 * scaleFactor; // Global padding
+    const padding = 8 * scale; // Global padding
 
     const circleSize = gridWidth / gridSizeX - padding;
     const totalWidth = gridSizeX * circleSize + (gridSizeX - 1) * padding;
     const totalHeight = gridSizeY * circleSize + (gridSizeY - 1) * padding;
 
     // Centralize the grid based on the new
-    const startX = (sketch.width - totalWidth) / 2 + offsetX;
-    const startY = (sketch.height - totalHeight) / 2 + offsetY;
+    const startX = (width - totalWidth) / 2 + offsetX;
+    const startY = (height - totalHeight) / 2 + offsetY;
 
     switch (gridMode) {
       case "rectangular":
         drawRectangularGrid(
+          p,
           startX,
           startY,
           gridSizeX,
@@ -147,6 +165,7 @@ new p5((sketch) => {
         break;
       case "reverseTriangular":
         drawReverseTriangularGrid(
+          p,
           startX,
           startY,
           gridSizeX,
@@ -158,6 +177,7 @@ new p5((sketch) => {
         break;
       case "triangular":
         drawTriangularGrid(
+          p,
           startX,
           startY,
           gridSizeX,
@@ -171,6 +191,7 @@ new p5((sketch) => {
   }
 
   function drawRectangularGrid(
+    p,
     startX,
     startY,
     gridSizeX,
@@ -191,14 +212,15 @@ new p5((sketch) => {
           gridSizeX,
           step
         );
-        sketch.noStroke();
-        sketch.fill(fillColor);
-        drawShape(x, y, circleSize, shapeType);
+        p.noStroke();
+        p.fill(fillColor);
+        drawShape(p, x, y, circleSize, shapeType);
       }
     }
   }
 
   function drawTriangularGrid(
+    p,
     startX,
     startY,
     gridSizeX,
@@ -207,8 +229,8 @@ new p5((sketch) => {
     shapeType,
     selectedCombination
   ) {
-    const centerX = sketch.width / 2;
-    const centerY = sketch.height / 2;
+    const centerX = p.width / 2;
+    const centerY = p.height / 2;
     for (let i = 0; i < gridSizeX; i++) {
       for (let j = 0; j <= i; j++) {
         const x =
@@ -223,14 +245,15 @@ new p5((sketch) => {
           gridSizeX,
           step
         );
-        sketch.noStroke();
-        sketch.fill(fillColor);
-        drawShape(x, y, circleSize, shapeType);
+        p.noStroke();
+        p.fill(fillColor);
+        drawShape(p, x, y, circleSize, shapeType);
       }
     }
   }
 
   function drawReverseTriangularGrid(
+    p,
     startX,
     startY,
     gridSizeX,
@@ -239,8 +262,8 @@ new p5((sketch) => {
     shapeType,
     selectedCombination
   ) {
-    const centerX = sketch.width / 2;
-    const centerY = sketch.height / 2;
+    const centerX = p.width / 2;
+    const centerY = p.height / 2;
     for (let i = gridSizeX - 1; i >= 0; i--) {
       for (let j = 0; j <= i; j++) {
         const x =
@@ -255,23 +278,23 @@ new p5((sketch) => {
           gridSizeX,
           step
         );
-        sketch.noStroke();
-        sketch.fill(fillColor);
-        drawShape(x, y, circleSize, shapeType);
+        p.noStroke();
+        p.fill(fillColor);
+        drawShape(p, x, y, circleSize, shapeType);
       }
     }
   }
 
-  function drawShape(x, y, size, shapeType) {
+  function drawShape(p, x, y, size, shapeType) {
     switch (shapeType) {
       case "circle":
-        sketch.ellipse(x, y, size, size);
+        p.ellipse(x, y, size, size);
         break;
       case "half-circle":
-        sketch.arc(x, y, size, size, 0, sketch.PI);
+        p.arc(x, y, size, size, 0, p.PI);
         break;
       case "triangle":
-        sketch.triangle(
+        p.triangle(
           x,
           y - size / 2,
           x - size / 2,
@@ -281,7 +304,7 @@ new p5((sketch) => {
         );
         break;
       case "square":
-        sketch.rect(x - size / 2, y - size / 2, size, size);
+        p.rect(x - size / 2, y - size / 2, size, size);
         break;
     }
   }
@@ -496,6 +519,8 @@ new p5((sketch) => {
       moveAwayFromCenter();
     } else if (sketch.key === "R" || sketch.key === "r") {
       resetAnimation();
+    } else if (sketch.key === "S" || sketch.key === "s") {
+      saveHighResImage();
     }
   };
 
@@ -519,6 +544,38 @@ new p5((sketch) => {
     animationProgress = 0;
     movingToCenter = true;
     sketch.redraw();
+  }
+
+  function saveHighResImage() {
+    // Temporarily resize the main canvas
+    let originalWidth = sketch.width;
+    let originalHeight = sketch.height;
+    let originalPixelDensity = sketch.pixelDensity();
+
+    let highResWidth = 4000;
+    let highResHeight = 4000;
+
+    // Temporarily set pixel density to 1
+    sketch.pixelDensity(1);
+    sketch.resizeCanvas(highResWidth, highResHeight, true);
+
+    // Render the high-res version
+    renderToCanvas(
+      sketch,
+      highResWidth,
+      highResHeight,
+      highResWidth / baseWidth
+    );
+
+    // Save the high-res image
+    sketch.saveCanvas("high_res_canvas", "png");
+
+    // Restore original pixel density and canvas size
+    sketch.pixelDensity(originalPixelDensity);
+    sketch.resizeCanvas(originalWidth, originalHeight, true);
+
+    // Re-render the original canvas
+    renderToCanvas(sketch, originalWidth, originalHeight, scaleFactor);
   }
 
   function randomChoice(array) {
