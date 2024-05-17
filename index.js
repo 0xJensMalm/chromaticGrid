@@ -17,6 +17,15 @@ new p5((sketch) => {
   const gradientDirections = ["horizontal", "vertical"];
   const shapes = ["circle", "half-circle", "triangle", "square"];
 
+  let animationSpeed = 0.03;
+  let isAnimating = false;
+  let animationProgress = 0;
+  let movingToCenter = true;
+  let initialShapes = [];
+  let initialOffsets = [];
+  let initialColors = [];
+  let initialColorIndices = [];
+
   sketch.setup = function () {
     resizeSketchCanvas();
     sketch.pixelDensity(10); // Set higher pixel density for better quality
@@ -25,8 +34,8 @@ new p5((sketch) => {
     direction =
       $fx.rand() > 0.5 ? gradientDirections[0] : gradientDirections[1];
 
-    horizontalOffsetStep = randomChoice([10, 20]);
-    verticalOffsetStep = randomChoice([10, 20, 30, 40, 50, 60, 70, 80]);
+    horizontalOffsetStep = randomChoice([6, 12, 24]);
+    verticalOffsetStep = randomChoice([10, 20, 30, 40, 50, 60]);
 
     // Retrieve combinations and set a default index
     const colorCombinations = getColorCombinations();
@@ -47,6 +56,18 @@ new p5((sketch) => {
       colorPalette: selectedKey,
       cellShapes: [], // Placeholder, will be filled dynamically
     });
+
+    // Store initial shapes, offsets, and color indices
+    for (let i = 0; i < numLayers; i++) {
+      const { offsetX, offsetY } = calculateOffset(i);
+      let shapeType = randomChoice(shapes);
+      initialShapes.push(shapeType);
+      initialOffsets.push({ offsetX, offsetY });
+      initialColors.push(selectedCombination); // Store initial colors
+      initialColorIndices.push(
+        Math.floor($fx.rand() * selectedCombination.length)
+      ); // Store initial color indices
+    }
   };
 
   sketch.draw = function () {
@@ -54,29 +75,30 @@ new p5((sketch) => {
     sketch.blendMode(sketch.ADD);
 
     const usedShapes = [];
-    const colorCombinations = getColorCombinations();
-    const combinationKeys = Object.keys(colorCombinations); // Get combination names
-
     for (let i = 0; i < numLayers; i++) {
-      const { offsetX, offsetY } = calculateOffset(i);
-      let shapeType = randomChoice(shapes);
-      usedShapes.push(shapeType); // Collect used shapes
-      let selectedKey = randomChoice(combinationKeys); // Select a random key (combination name)
-      let selectedCombination = colorCombinations[selectedKey];
-      let colorIndex = Math.floor($fx.rand() * selectedCombination.length);
+      const { offsetX, offsetY } = initialOffsets[i];
+      let shapeType = initialShapes[i];
+      usedShapes.push(shapeType);
+      let selectedCombination = initialColors[i];
+      let colorIndex = initialColorIndices[i];
 
-      drawGrid(offsetX, offsetY, colorIndex, selectedCombination, shapeType);
+      let adjustedOffsetX = offsetX * (1 - animationProgress);
+      let adjustedOffsetY = offsetY * (1 - animationProgress);
 
-      console.log(
-        `Layer ${
-          i + 1
-        }: Colors: ${selectedKey}, Shape ${shapeType}, Offset X ${offsetX.toFixed(
-          2
-        )}, Offset Y ${offsetY.toFixed(2)}`
+      if (!movingToCenter) {
+        adjustedOffsetX = offsetX * animationProgress;
+        adjustedOffsetY = offsetY * animationProgress;
+      }
+
+      drawGrid(
+        adjustedOffsetX,
+        adjustedOffsetY,
+        colorIndex,
+        selectedCombination,
+        shapeType
       );
     }
 
-    // Update fxhash features with used shapes
     $fx.features({
       layers: numLayers,
       horizontalOffsetStep: horizontalOffsetStep,
@@ -108,7 +130,7 @@ new p5((sketch) => {
     const totalWidth = gridSizeX * circleSize + (gridSizeX - 1) * padding;
     const totalHeight = gridSizeY * circleSize + (gridSizeY - 1) * padding;
 
-    // Centralize the grid based on the new canvas size
+    // Centralize the grid based on the new
     const startX = (sketch.width - totalWidth) / 2 + offsetX;
     const startY = (sketch.height - totalHeight) / 2 + offsetY;
 
@@ -292,7 +314,7 @@ new p5((sketch) => {
         { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
         { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
       ],
-      Combination4: [
+      Monochrome: [
         { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
       ],
       Combination5: [
@@ -395,10 +417,36 @@ new p5((sketch) => {
   }
 
   sketch.keyPressed = function () {
-    if (sketch.key === "N" || sketch.key === "n") {
-      window.location.reload();
+    if (sketch.key === "A" || sketch.key === "a") {
+      moveToCenter();
+    } else if (sketch.key === "D" || sketch.key === "d") {
+      moveAwayFromCenter();
+    } else if (sketch.key === "R" || sketch.key === "r") {
+      resetAnimation();
     }
   };
+
+  function moveToCenter() {
+    if (animationProgress < 1) {
+      animationProgress += animationSpeed;
+      animationProgress = Math.min(animationProgress, 1);
+      sketch.redraw();
+    }
+  }
+
+  function moveAwayFromCenter() {
+    if (animationProgress > 0) {
+      animationProgress -= animationSpeed;
+      animationProgress = Math.max(animationProgress, 0);
+      sketch.redraw();
+    }
+  }
+
+  function resetAnimation() {
+    animationProgress = 0;
+    movingToCenter = true;
+    sketch.redraw();
+  }
 
   function randomChoice(array) {
     return array[Math.floor($fx.rand() * array.length)];
