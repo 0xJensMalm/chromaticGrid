@@ -5,33 +5,33 @@ new p5((sketch) => {
   let scaleFactor;
   let selectedKey;
 
-  let baseWidth = 400; // Increased base width
-  let baseHeight = 400; // Increased base height
+  let baseWidth = 400;
+  let baseHeight = 400;
 
   const numLayers = 3;
   let gridPadding = 100;
 
   const gridModes = ["rectangular", "reverseTriangular", "triangular"];
-  let maxOffsetMultiplier = 3; // Maximum multiplier for baseOffsetStep
+  let maxOffsetMultiplier = 3;
   let gradientStrength = 100;
   const gradientDirections = ["horizontal", "vertical"];
   const shapes = ["circle", "half-circle", "triangle", "square"];
 
-  let animationSpeed = 0.03;
+  let animationSpeed = 0.02;
   let animationProgress = 0;
   let movingToCenter = true;
   let initialShapes = [];
   let initialOffsets = [];
   let initialColors = [];
   let initialColorIndices = [];
-
-  let highResCanvas;
+  let moveToCenterFlag = false;
+  let moveAwayFromCenterFlag = false;
 
   sketch.setup = function () {
     resizeSketchCanvas();
-    let canvas = sketch.createCanvas(sketch.width, sketch.height); // Create the canvas
-    canvas.id("myCanvas"); // Assign the ID to the canvas
-    sketch.pixelDensity(10); // Set higher pixel density for better quality
+    let canvas = sketch.createCanvas(sketch.width, sketch.height);
+    canvas.id("myCanvas");
+    sketch.pixelDensity(10);
     sketch.noLoop();
     offsetAngle = sketch.PI / 4;
     direction =
@@ -41,21 +41,20 @@ new p5((sketch) => {
     verticalOffsetStep = randomChoice([10, 20, 30, 40, 50, 60]);
 
     const colorCombinations = getColorCombinations();
-    const selectedCombinationObj = weightedRandomChoice(colorCombinations); // Select a random combination based on weights
-    selectedKey = selectedCombinationObj.name; // Get the name of the selected combination
+    const selectedCombinationObj = weightedRandomChoice(colorCombinations);
+    selectedKey = selectedCombinationObj.name;
     let selectedCombination = selectedCombinationObj.colors;
 
     colorIndex = Math.floor($fx.rand() * selectedCombination.length);
     gridMode = randomChoice(gridModes);
 
-    // fxhash features
     $fx.features({
       layers: numLayers,
       horizontalOffsetStep: horizontalOffsetStep,
       verticalOffsetStep: verticalOffsetStep,
       gridMode: gridMode,
       colorPalette: selectedKey,
-      cellShapes: [], // Placeholder, will be filled dynamically
+      cellShapes: [],
     });
 
     for (let i = 0; i < numLayers; i++) {
@@ -63,21 +62,26 @@ new p5((sketch) => {
       let shapeType = randomChoice(shapes);
       initialShapes.push(shapeType);
       initialOffsets.push({ offsetX, offsetY });
-      initialColors.push(selectedCombination); // Store initial colors
+      initialColors.push(selectedCombination);
       initialColorIndices.push(
         Math.floor($fx.rand() * selectedCombination.length)
-      ); // Store initial color indices
+      );
     }
 
-    // Create the hidden high-resolution canvas
-    highResCanvas = sketch.createGraphics(4000, 4000); // 10x the base size for higher resolution
+    sketch.loop();
   };
 
   sketch.draw = function () {
+    if (moveToCenterFlag) {
+      moveToCenter();
+    }
+    if (moveAwayFromCenterFlag) {
+      moveAwayFromCenter();
+    }
     renderToCanvas(sketch, sketch.width, sketch.height, scaleFactor);
   };
 
-  function renderToCanvas(p, width, height, scale) {
+  function renderToCanvas(p, width, height, scale, paddingScale = 1) {
     p.background(20);
     p.blendMode(p.ADD);
 
@@ -106,7 +110,8 @@ new p5((sketch) => {
         shapeType,
         width,
         height,
-        scale
+        scale,
+        paddingScale
       );
     }
 
@@ -116,7 +121,7 @@ new p5((sketch) => {
       verticalOffsetStep: verticalOffsetStep,
       gridMode: gridMode,
       colorPalette: selectedKey,
-      cellShapes: Array.from(new Set(usedShapes)).join(" - "), // Unique shapes
+      cellShapes: Array.from(new Set(usedShapes)).join(" - "),
     });
 
     p.blendMode(p.BLEND);
@@ -135,17 +140,16 @@ new p5((sketch) => {
   ) {
     let selectedCombination = colorCombinations[colorIndex];
 
-    const gridWidth = 375 * scale; // Scaled grid width
-    const gridHeight = gridWidth * (baseHeight / baseWidth); // Aspect ratio based on initial setup
+    const gridWidth = 375 * scale;
+    const gridHeight = gridWidth * (baseHeight / baseWidth);
     const gridSizeX = 12;
     const gridSizeY = gridSizeX * (baseHeight / baseWidth);
-    const padding = 8 * scale; // Global padding
+    const padding = 8 * scale;
 
     const circleSize = gridWidth / gridSizeX - padding;
     const totalWidth = gridSizeX * circleSize + (gridSizeX - 1) * padding;
     const totalHeight = gridSizeY * circleSize + (gridSizeY - 1) * padding;
 
-    // Centralize the grid based on the new
     const startX = (width - totalWidth) / 2 + offsetX;
     const startY = (height - totalHeight) / 2 + offsetY;
 
@@ -315,78 +319,78 @@ new p5((sketch) => {
         name: "Capella",
         weight: 0.15,
         colors: [
-          { start: "#FF0000", end: "#E00000" }, // Red to Darker Red
-          { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
-          { start: "#FFA500", end: "#E09500" }, // Orange to Darker Orange
-          { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
-          { start: "#FF69B4", end: "#E06090" }, // Hot Pink to Darker Hot Pink
-          { start: "#00FFFF", end: "#00E0E0" }, // Cyan to Darker Cyan
+          { start: "#FF0000", end: "#E00000" },
+          { start: "#FFFF00", end: "#E0E000" },
+          { start: "#FFA500", end: "#E09500" },
+          { start: "#00FF00", end: "#00E000" },
+          { start: "#FF69B4", end: "#E06090" },
+          { start: "#00FFFF", end: "#00E0E0" },
         ],
       },
       {
         name: "Byzantium",
         weight: 0.15,
         colors: [
-          { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue
-          { start: "#800080", end: "#700070" }, // Purple to Darker Purple
-          { start: "#0000FF", end: "#0000E0" }, // Blue to Darker Blue again
-          { start: "#FFD700", end: "#E0C300" }, // Gold to Darker Gold
-          { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
-          { start: "#BA55D3", end: "#A050C0" }, // Medium Orchid to Darker Medium Orchid
+          { start: "#0000FF", end: "#0000E0" },
+          { start: "#800080", end: "#700070" },
+          { start: "#0000FF", end: "#0000E0" },
+          { start: "#FFD700", end: "#E0C300" },
+          { start: "#FF4500", end: "#E03E00" },
+          { start: "#BA55D3", end: "#A050C0" },
         ],
       },
       {
         name: "Istanbul",
         weight: 0.15,
         colors: [
-          { start: "#00FF00", end: "#00E000" }, // Green to Darker Green
-          { start: "#FF00FF", end: "#E000E0" }, // Magenta to Darker Magenta
-          { start: "#FFFF00", end: "#E0E000" }, // Yellow to Darker Yellow
-          { start: "#1E90FF", end: "#1A80E0" }, // Dodger Blue to Darker Dodger Blue
-          { start: "#32CD32", end: "#2EB82E" }, // LimeGreen to Darker LimeGreen
-          { start: "#FF1493", end: "#E01283" }, // DeepPink to Darker DeepPink
+          { start: "#00FF00", end: "#00E000" },
+          { start: "#FF00FF", end: "#E000E0" },
+          { start: "#FFFF00", end: "#E0E000" },
+          { start: "#1E90FF", end: "#1A80E0" },
+          { start: "#32CD32", end: "#2EB82E" },
+          { start: "#FF1493", end: "#E01283" },
         ],
       },
       {
         name: "Berlin",
         weight: 0.15,
         colors: [
-          { start: "#6A0DAD", end: "#D8BFD8" }, // Purple to Thistle
-          { start: "#FF6347", end: "#FFA07A" }, // Tomato to Light Salmon
-          { start: "#40E0D0", end: "#AFEEEE" }, // Turquoise to Pale Turquoise
+          { start: "#6A0DAD", end: "#D8BFD8" },
+          { start: "#FF6347", end: "#FFA07A" },
+          { start: "#40E0D0", end: "#AFEEEE" },
         ],
       },
       {
         name: "Paris",
         weight: 0.15,
         colors: [
-          { start: "#3CB371", end: "#8FBC8F" }, // Medium Sea Green to Dark Sea Green
-          { start: "#FFD700", end: "#FFFACD" }, // Gold to Lemon Chiffon
-          { start: "#00CED1", end: "#E0FFFF" }, // Dark Turquoise to Light Cyan
+          { start: "#3CB371", end: "#8FBC8F" },
+          { start: "#FFD700", end: "#FFFACD" },
+          { start: "#00CED1", end: "#E0FFFF" },
         ],
       },
       {
         name: "Shanghai",
         weight: 0.15,
         colors: [
-          { start: "#FF4500", end: "#E03E00" }, // OrangeRed to Darker OrangeRed
-          { start: "#8A2BE2", end: "#7A1BE2" }, // BlueViolet to Darker BlueViolet
-          { start: "#00FA9A", end: "#00E89A" }, // MediumSpringGreen to Darker MediumSpringGreen
-          { start: "#7FFF00", end: "#6FEF00" }, // Chartreuse to Darker Chartreuse
-          { start: "#D2691E", end: "#C2691E" }, // Chocolate to Darker Chocolate
-          { start: "#DC143C", end: "#CC143C" }, // Crimson to Darker Crimson
+          { start: "#FF4500", end: "#E03E00" },
+          { start: "#8A2BE2", end: "#7A1BE2" },
+          { start: "#00FA9A", end: "#00E89A" },
+          { start: "#7FFF00", end: "#6FEF00" },
+          { start: "#D2691E", end: "#C2691E" },
+          { start: "#DC143C", end: "#CC143C" },
         ],
       },
       {
         name: "London",
         weight: 0.15,
         colors: [
-          { start: "#FF8C00", end: "#E08C00" }, // DarkOrange to Darker DarkOrange
-          { start: "#00BFFF", end: "#00AFFF" }, // DeepSkyBlue to Darker DeepSkyBlue
-          { start: "#8B0000", end: "#7B0000" }, // DarkRed to Darker DarkRed
-          { start: "#ADFF2F", end: "#9DFF2F" }, // GreenYellow to Darker GreenYellow
-          { start: "#FF69B4", end: "#E060A4" }, // HotPink to Darker HotPink
-          { start: "#4B0082", end: "#3B0072" }, // Indigo to Darker Indigo
+          { start: "#FF8C00", end: "#E08C00" },
+          { start: "#00BFFF", end: "#00AFFF" },
+          { start: "#8B0000", end: "#7B0000" },
+          { start: "#ADFF2F", end: "#9DFF2F" },
+          { start: "#FF69B4", end: "#E060A4" },
+          { start: "#4B0082", end: "#3B0072" },
         ],
       },
       {
@@ -402,16 +406,12 @@ new p5((sketch) => {
       {
         name: "Monochrome White",
         weight: 0.02,
-        colors: [
-          { start: "#FFFFFF", end: "#FFFFFF" }, // Completely White
-        ],
+        colors: [{ start: "#FFFFFF", end: "#FFFFFF" }],
       },
       {
         name: "Monochrome Azure",
         weight: 0.02,
-        colors: [
-          { start: "#1c1e8a", end: "#1c1e8a" }, // Completely White
-        ],
+        colors: [{ start: "#1c1e8a", end: "#1c1e8a" }],
       },
     ];
   }
@@ -426,12 +426,11 @@ new p5((sketch) => {
       }
       randomNum -= array[i].weight;
     }
-    return array[array.length - 1]; // Return the last element as a fallback
+    return array[array.length - 1];
   }
 
   function getGradientColor(startColor, endColor, totalSteps, step) {
     let adjustedStep = step / (totalSteps * (gradientStrength / 100));
-
     adjustedStep = Math.min(adjustedStep, 1);
 
     let startRGB = hexToRgb(startColor);
@@ -448,14 +447,11 @@ new p5((sketch) => {
     let r = 0,
       g = 0,
       b = 0;
-    // 3 digits
     if (hex.length == 4) {
       r = parseInt(hex[1] + hex[1], 16);
       g = parseInt(hex[2] + hex[2], 16);
       b = parseInt(hex[3] + hex[3], 16);
-    }
-    // 6 digits
-    else if (hex.length == 7) {
+    } else if (hex.length == 7) {
       r = parseInt(hex[1] + hex[2], 16);
       g = parseInt(hex[3] + hex[4], 16);
       b = parseInt(hex[5] + hex[6], 16);
@@ -466,23 +462,21 @@ new p5((sketch) => {
   function calculateStep(i, j, direction) {
     switch (direction) {
       case "horizontal":
-        return i; // Step based on horizontal position
+        return i;
       case "vertical":
-        return j; // Step based on vertical position
+        return j;
       case "diagonal":
-        // Assuming a simple diagonal where we sum the indices
-        return i + j; // Step based on the sum of positions (diagonal)
+        return i + j;
       default:
-        return 0; // Default case, should not be reached
+        return 0;
     }
   }
 
   function calculateOffset(layerIndex) {
     if (layerIndex === 0) {
-      // First layer is centered, no offset
       return { offsetX: 0, offsetY: 0 };
     } else {
-      let multiplier = Math.floor($fx.rand() * (maxOffsetMultiplier + 1)); // from 0 to maxOffsetMultiplier
+      let multiplier = Math.floor($fx.rand() * (maxOffsetMultiplier + 1));
       let offsetX = multiplier * horizontalOffsetStep * Math.cos(offsetAngle);
       let offsetY = multiplier * verticalOffsetStep * Math.sin(offsetAngle);
       return { offsetX, offsetY };
@@ -514,13 +508,19 @@ new p5((sketch) => {
 
   sketch.keyPressed = function () {
     if (sketch.key === "A" || sketch.key === "a") {
-      moveToCenter();
+      moveToCenterFlag = true;
+      moveAwayFromCenterFlag = false;
     } else if (sketch.key === "D" || sketch.key === "d") {
-      moveAwayFromCenter();
-    } else if (sketch.key === "R" || sketch.key === "r") {
-      resetAnimation();
-    } else if (sketch.key === "S" || sketch.key === "s") {
-      saveHighResImage();
+      moveToCenterFlag = false;
+      moveAwayFromCenterFlag = true;
+    }
+  };
+
+  sketch.keyReleased = function () {
+    if (sketch.key === "A" || sketch.key === "a") {
+      moveToCenterFlag = false;
+    } else if (sketch.key === "D" || sketch.key === "d") {
+      moveAwayFromCenterFlag = false;
     }
   };
 
@@ -538,44 +538,6 @@ new p5((sketch) => {
       animationProgress = Math.max(animationProgress, 0);
       sketch.redraw();
     }
-  }
-
-  function resetAnimation() {
-    animationProgress = 0;
-    movingToCenter = true;
-    sketch.redraw();
-  }
-
-  function saveHighResImage() {
-    // Temporarily resize the main canvas
-    let originalWidth = sketch.width;
-    let originalHeight = sketch.height;
-    let originalPixelDensity = sketch.pixelDensity();
-
-    let highResWidth = 4000;
-    let highResHeight = 4000;
-
-    // Temporarily set pixel density to 1
-    sketch.pixelDensity(1);
-    sketch.resizeCanvas(highResWidth, highResHeight, true);
-
-    // Render the high-res version
-    renderToCanvas(
-      sketch,
-      highResWidth,
-      highResHeight,
-      highResWidth / baseWidth
-    );
-
-    // Save the high-res image
-    sketch.saveCanvas("high_res_canvas", "png");
-
-    // Restore original pixel density and canvas size
-    sketch.pixelDensity(originalPixelDensity);
-    sketch.resizeCanvas(originalWidth, originalHeight, true);
-
-    // Re-render the original canvas
-    renderToCanvas(sketch, originalWidth, originalHeight, scaleFactor);
   }
 
   function randomChoice(array) {
